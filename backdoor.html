@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Backdoor | Cadastro de Estoque</title>
+    <style>
+        :root {
+            --bg-color: #111827; 
+            --surface: #1F2937;
+            --primary: #3B82F6;
+            --text-main: #F9FAFB;
+            --text-light: #9CA3AF;
+            --border: #374151;
+            --success: #10B981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
+        
+        header { background-color: #000000; padding: 1.2rem 1rem; text-align: center; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 1.2rem; color: var(--success); letter-spacing: 2px;}
+        
+        .container { padding: 1.5rem 1rem; flex: 1; max-width: 600px; margin: 0 auto; width: 100%; }
+        
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; font-size: 0.9rem; margin-bottom: 0.4rem; color: var(--text-light); }
+        .form-control { width: 100%; padding: 0.8rem; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; }
+        .form-control:focus { border-color: var(--primary); }
+        
+        .photo-upload-area { border: 2px dashed var(--border); border-radius: 8px; padding: 1.5rem; text-align: center; background-color: var(--surface); margin-bottom: 1.5rem; }
+        .photo-upload-area input[type="file"] { display: none; }
+        .btn-photo { background-color: var(--border); color: var(--text-main); padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 0.9rem; margin-top: 0.5rem; }
+        #preview-img { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 1rem; display: none; margin-left: auto; margin-right: auto; }
+        
+        .btn-submit { width: 100%; padding: 1.2rem; background-color: var(--success); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 1rem; }
+        .btn-submit:disabled { background-color: var(--border); cursor: not-allowed; }
+
+        #loading-msg { display: none; text-align: center; color: var(--success); margin-top: 1rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        [ BACKDOOR ADMIN ]
+    </header>
+
+    <div class="container">
+        <p style="color: var(--text-light); margin-bottom: 1.5rem; text-align: center; font-size: 0.9rem;">
+            Alimentação direta do banco de dados (Estoque e Vitrine).
+        </p>
+
+        <div class="photo-upload-area">
+            <label style="display:block; color: var(--text-light); margin-bottom: 0.5rem;">Foto do Produto</label>
+            <label class="btn-photo" for="foto-produto">📷 Tirar Foto ou Escolher</label>
+            <input type="file" id="foto-produto" accept="image/*" capture="environment" onchange="mostrarPreview()">
+            <img id="preview-img" alt="Preview da Foto">
+        </div>
+
+        <div class="form-group">
+            <label>Nome do Produto</label>
+            <input type="text" id="nome-produto" class="form-control" placeholder="Ex: Sutiã Renda Premium">
+        </div>
+
+        <div class="form-group">
+            <label>Variação / Detalhe (Opcional)</label>
+            <input type="text" id="variacao-produto" class="form-control" placeholder="Ex: Preto - Tamanho M">
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+            <div class="form-group" style="flex: 1;">
+                <label>Preço de Venda (R$)</label>
+                <input type="number" id="preco-produto" class="form-control" placeholder="Ex: 89.90" step="0.01">
+            </div>
+            
+            <div class="form-group" style="flex: 1;">
+                <label>Estoque Inicial</label>
+                <input type="number" id="qtd-produto" class="form-control" placeholder="Ex: 12">
+            </div>
+        </div>
+
+        <button id="btn-salvar" class="btn-submit" onclick="enviarParaBanco()">⬆ Subir para a Nuvem</button>
+        <p id="loading-msg">Processando, comprimindo e salvando... Aguarde.</p>
+    </div>
+
+    <!-- INÍCIO DO CÓDIGO FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        
+        // Removemos completamente o Firebase Storage daqui.
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA80-kjGG9SSnnch5RtQjUjWytLxsZ05Oc",
+            authDomain: "sistema-de-estoque-de-vitrine.firebaseapp.com",
+            projectId: "sistema-de-estoque-de-vitrine",
+            storageBucket: "sistema-de-estoque-de-vitrine.firebasestorage.app",
+            messagingSenderId: "708337828691",
+            appId: "1:708337828691:web:6d579669aaa92e3c3357a6",
+            measurementId: "G-9YZBZDGKS3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Mostra a miniatura na tela
+        window.mostrarPreview = () => {
+            const arquivo = document.getElementById('foto-produto').files[0];
+            if (arquivo) {
+                const img = document.getElementById('preview-img');
+                img.src = URL.createObjectURL(arquivo);
+                img.style.display = 'block';
+            }
+        };
+
+        // Função de Engenharia: Comprime a imagem pesada da câmera e converte para Texto (Base64)
+        const processarImagem = (arquivo) => {
+            return new Promise((resolve) => {
+                const leitor = new FileReader();
+                leitor.readAsDataURL(arquivo);
+                leitor.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 500; // Reduz a resolução para não pesar o banco
+                        const escala = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * escala;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // Retorna o código de texto da imagem em qualidade média (0.6)
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    };
+                };
+            });
+        };
+
+        window.enviarParaBanco = async () => {
+            const btn = document.getElementById('btn-salvar');
+            const loading = document.getElementById('loading-msg');
+            const arquivoFoto = document.getElementById('foto-produto').files[0];
+            const nome = document.getElementById('nome-produto').value;
+            const variacao = document.getElementById('variacao-produto').value;
+            const preco = parseFloat(document.getElementById('preco-produto').value);
+            const quantidade = parseInt(document.getElementById('qtd-produto').value);
+
+            if (!nome || isNaN(preco) || isNaN(quantidade)) {
+                return alert("Preencha o Nome, Preço e Quantidade corretamente.");
+            }
+
+            btn.disabled = true;
+            loading.style.display = 'block';
+
+            try {
+                let fotoEmTexto = "";
+                
+                // Se o usuário selecionou uma foto, executa a compressão e converte para texto
+                if (arquivoFoto) {
+                    fotoEmTexto = await processarImagem(arquivoFoto);
+                }
+
+                // Salva tudo diretamente no Firestore (Banco gratuito)
+                await addDoc(collection(db, "produtos"), {
+                    nome: nome,
+                    variacao: variacao,
+                    preco: preco,
+                    quantidade: quantidade,
+                    imagem_url: fotoEmTexto, 
+                    data_criacao: new Date()
+                });
+
+                alert("Sucesso! Produto e Foto salvos no Banco de Dados.");
+                
+                // Limpa o formulário
+                document.getElementById('nome-produto').value = '';
+                document.getElementById('variacao-produto').value = '';
+                document.getElementById('preco-produto').value = '';
+                document.getElementById('qtd-produto').value = '';
+                document.getElementById('foto-produto').value = '';
+                document.getElementById('preview-img').style.display = 'none';
+
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao conectar com o banco de dados de texto.");
+            } finally {
+                btn.disabled = false;
+                loading.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
+

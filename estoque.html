@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistema de Estoque App</title>
+    <style>
+        :root {
+            --bg-color: #F5F5DC; --surface: #FFFFFF; --primary: #2563EB; --text-main: #111827; 
+            --text-light: #4B5563; --border: #D1D5DB; --success: #10B981; --danger: #EF4444; --warning: #F59E0B; 
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        #login-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; z-index: 100; }
+        .login-box { width: 100%; max-width: 320px; background: var(--surface); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .login-box h1 { font-size: 1.6rem; margin-bottom: 0.5rem; text-align: center; }
+        .input-group { margin-bottom: 1rem; }
+        .input-group label { display: block; font-size: 0.9rem; margin-bottom: 0.3rem; font-weight: 600; }
+        .input-group input { width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; }
+        .btn { width: 100%; padding: 1rem; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        
+        #app-screen { display: none; flex-direction: column; height: 100vh; }
+        header { background-color: var(--surface); padding: 1.2rem 1rem; text-align: center; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 1.2rem; }
+        .content-area { flex: 1; overflow-y: auto; padding: 1rem; padding-bottom: 90px; }
+        .view { display: none; } .view.active { display: block; }
+        
+        .product-card { background: var(--surface); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border); }
+        .product-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-weight: bold; font-size: 1.05rem; }
+        .stock-badge { background: var(--bg-color); padding: 0.3rem 0.6rem; border-radius: 12px; font-weight: bold; font-size: 0.85rem; border: 1px solid var(--border); }
+        
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background-color: var(--surface); display: flex; justify-content: space-around; padding: 0.8rem 0; border-top: 1px solid var(--border); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-light); font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 1.5rem; margin-bottom: 0.2rem; }
+        
+        .form-cadastro { background: var(--surface); padding: 1.2rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .form-input { width: 100%; padding: 0.8rem; margin-bottom: 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; }
+        
+        .action-row { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.8rem; }
+        .controls-row { display: flex; gap: 0.5rem; align-items: center; width: 100%; }
+        .qtd-input { width: 70px; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; text-align: center; }
+        .btn-small { flex: 1; padding: 0.6rem 0.5rem; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-sell { background-color: var(--success); } .btn-return { background-color: var(--warning); }
+        .btn-edit { background-color: var(--primary); width: fit-content; padding: 0.4rem 0.8rem; }
+        .btn-disabled { background-color: #D1D5DB; cursor: not-allowed; }
+
+        /* Janela Flutuante de Edição (Modal) */
+        #modal-edicao { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; padding: 1rem; }
+        .modal-box { background: var(--surface); width: 100%; max-width: 400px; padding: 1.5rem; border-radius: 12px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h1>Acesso Restrito</h1>
+            <div class="input-group"><label>E-mail</label><input type="email" id="email-login" placeholder="vendas@loja.com"></div>
+            <div class="input-group"><label>Senha</label><input type="password" id="senha-login" placeholder="Sua senha"></div>
+            <button class="btn" onclick="fazerLogin()">Entrar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Edição (Invisível até o clique) -->
+    <div id="modal-edicao">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 1rem;">Editar Produto</h3>
+            <input type="hidden" id="edit-id">
+            <label style="font-size: 0.8rem; color: gray;">Nome</label>
+            <input type="text" id="edit-nome" class="form-input">
+            <label style="font-size: 0.8rem; color: gray;">Variação / Detalhe</label>
+            <input type="text" id="edit-var" class="form-input">
+            <div style="display: flex; gap: 0.5rem;">
+                <div style="flex: 1;"><label style="font-size: 0.8rem; color: gray;">Preço (R$)</label><input type="number" id="edit-preco" class="form-input" step="0.01"></div>
+                <div style="flex: 1;"><label style="font-size: 0.8rem; color: gray;">Estoque</label><input type="number" id="edit-qtd" class="form-input"></div>
+            </div>
+            <button class="btn" onclick="salvarEdicao()" style="background-color: var(--success); margin-bottom: 0.5rem;">Salvar Alterações</button>
+            <button class="btn" onclick="fecharModal()" style="background-color: transparent; color: var(--danger); border: 1px solid var(--danger);">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="app-screen">
+        <header><span id="app-header">Meu Estoque</span></header>
+        <div class="content-area">
+            
+            <div id="view-estoque" class="view active">
+                <div class="form-cadastro">
+                    <h3 style="margin-bottom: 1rem;">+ Novo Produto</h3>
+                    <input type="text" id="nome-produto" class="form-input" placeholder="Nome (Ex: Vinil Pink Floyd)">
+                    <input type="text" id="variacao-produto" class="form-input" placeholder="Variação (Ex: Edição 1973)">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="preco-produto" class="form-input" placeholder="Preço R$" step="0.01">
+                        <input type="number" id="qtd-produto" class="form-input" placeholder="Qtd">
+                    </div>
+                    <button class="btn" onclick="cadastrarProduto()">Salvar Sem Foto</button>
+                    <p style="font-size: 0.8rem; color: gray; margin-top: 0.5rem; text-align: center;">Para adicionar foto, use o Backdoor.</p>
+                </div>
+                <h3 style="margin-bottom: 1rem;">Lista de Estoque</h3>
+                <div id="lista-produtos"></div>
+            </div>
+            
+            <div id="view-pdv" class="view">
+                <div style="margin-bottom: 1rem; font-size: 0.9rem;">Informe a quantidade e selecione a ação.</div>
+                <div id="lista-pdv"></div>
+            </div>
+
+            <div id="view-config" class="view">
+                <div class="form-cadastro">
+                    <h3 style="margin-bottom: 1rem;">Segurança</h3>
+                    <input type="password" id="nova-senha" class="form-input" placeholder="Nova Senha">
+                    <button class="btn" onclick="atualizarSenha()" style="background-color: var(--text-main); margin-bottom: 1.5rem;">Alterar Senha</button>
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 1.5rem;">
+                    <button class="btn" onclick="fazerLogout()" style="background-color: transparent; border: 2px solid var(--danger); color: var(--danger);">Sair (Encerrar Sessão)</button>
+                </div>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <div class="nav-item" onclick="mudarAba('pdv', 'Frente de Caixa', this)"><div class="nav-icon">🛒</div><span>Vender</span></div>
+            <div class="nav-item active" onclick="mudarAba('estoque', 'Meu Estoque', this)"><div class="nav-icon">📦</div><span>Estoque</span></div>
+            <div class="nav-item" onclick="mudarAba('config', 'Ajustes', this)"><div class="nav-icon">⚙️</div><span>Ajustes</span></div>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA80-kjGG9SSnnch5RtQjUjWytLxsZ05Oc",
+            authDomain: "sistema-de-estoque-de-vitrine.firebaseapp.com",
+            projectId: "sistema-de-estoque-de-vitrine",
+            storageBucket: "sistema-de-estoque-de-vitrine.firebasestorage.app",
+            messagingSenderId: "708337828691",
+            appId: "1:708337828691:web:6d579669aaa92e3c3357a6",
+            measurementId: "G-9YZBZDGKS3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app); 
+
+        window.fazerLogin = async () => {
+            const email = document.getElementById('email-login').value;
+            const senha = document.getElementById('senha-login').value;
+            try { await signInWithEmailAndPassword(auth, email, senha); } catch (e) { alert("Acesso Negado"); }
+        };
+        window.fazerLogout = async () => { await signOut(auth); };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) { document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'flex'; } 
+            else { document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app-screen').style.display = 'none'; }
+        });
+
+        window.mudarAba = (abaId, titulo, elementoMenu) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + abaId).classList.add('active');
+            document.getElementById('app-header').innerText = titulo;
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            elementoMenu.classList.add('active');
+        };
+
+        window.cadastrarProduto = async () => {
+            const nome = document.getElementById('nome-produto').value;
+            const variacao = document.getElementById('variacao-produto').value;
+            const preco = parseFloat(document.getElementById('preco-produto').value) || 0;
+            const quantidade = parseInt(document.getElementById('qtd-produto').value);
+
+            if(!nome || isNaN(quantidade)) return alert("Preencha Nome e Quantidade");
+
+            try {
+                await addDoc(collection(db, "produtos"), { nome: nome, variacao: variacao, preco: preco, quantidade: quantidade, imagem_url: "", data_criacao: new Date() });
+                document.getElementById('nome-produto').value = ''; document.getElementById('variacao-produto').value = '';
+                document.getElementById('preco-produto').value = ''; document.getElementById('qtd-produto').value = '';
+            } catch (e) { alert("Erro ao salvar"); }
+        };
+
+        // LÓGICA DE EDIÇÃO
+        window.abrirEdicao = (id, nome, variacao, preco, qtd) => {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-nome').value = nome;
+            document.getElementById('edit-var').value = variacao || '';
+            document.getElementById('edit-preco').value = preco || 0;
+            document.getElementById('edit-qtd').value = qtd;
+            document.getElementById('modal-edicao').style.display = 'flex';
+        };
+
+        window.fecharModal = () => { document.getElementById('modal-edicao').style.display = 'none'; };
+
+        window.salvarEdicao = async () => {
+            const id = document.getElementById('edit-id').value;
+            const nome = document.getElementById('edit-nome').value;
+            const variacao = document.getElementById('edit-var').value;
+            const preco = parseFloat(document.getElementById('edit-preco').value) || 0;
+            const qtd = parseInt(document.getElementById('edit-qtd').value) || 0;
+
+            try {
+                const produtoRef = doc(db, "produtos", id);
+                await updateDoc(produtoRef, { nome: nome, variacao: variacao, preco: preco, quantidade: qtd });
+                fecharModal();
+                alert("Produto atualizado com sucesso!");
+            } catch (e) { alert("Erro ao atualizar o banco de dados."); }
+        };
+
+        // LÓGICA DE VENDAS E DEVOLUÇÕES
+        window.registrarVenda = async (id, qtdAtual, nome) => {
+            const inputQtd = parseInt(document.getElementById(`qtd-${id}`).value);
+            if(inputQtd > qtdAtual) return alert("Estoque insuficiente!");
+            const produtoRef = doc(db, "produtos", id);
+            await updateDoc(produtoRef, { quantidade: qtdAtual - inputQtd });
+            await addDoc(collection(db, "movimentacoes"), { produto_nome: nome, quantidade: inputQtd, tipo: "venda", data_registro: new Date() });
+        };
+
+        window.registrarDevolucao = async (id, qtdAtual, nome) => {
+            const inputQtd = parseInt(document.getElementById(`qtd-${id}`).value);
+            const produtoRef = doc(db, "produtos", id);
+            await updateDoc(produtoRef, { quantidade: qtdAtual + inputQtd });
+            await addDoc(collection(db, "movimentacoes"), { produto_nome: nome, quantidade: inputQtd, tipo: "devolucao", data_registro: new Date() });
+        };
+
+        const q = query(collection(db, "produtos"), orderBy("data_criacao", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const listaEstoque = document.getElementById('lista-produtos');
+            const listaPDV = document.getElementById('lista-pdv');
+            listaEstoque.innerHTML = ''; listaPDV.innerHTML = '';
+
+            snapshot.forEach((doc) => {
+                const item = doc.data(); const id = doc.id;
+                const nomeCompleto = item.nome + (item.variacao ? ` - ${item.variacao}` : '');
+                const precoExibicao = item.preco ? `R$ ${item.preco.toFixed(2)}` : 'Sem preço';
+
+                // Aba Estoque (com botão Editar)
+                listaEstoque.innerHTML += `
+                    <div class="product-card">
+                        <div class="product-header">
+                            <span>${nomeCompleto}</span>
+                            <span class="stock-badge">${item.quantidade} un</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                            <span style="font-size: 0.9rem; color: gray;">${precoExibicao}</span>
+                            <button class="btn-small btn-edit" onclick="abrirEdicao('${id}', '${item.nome}', '${item.variacao || ''}', ${item.preco || 0}, ${item.quantidade})">✏️ Editar</button>
+                        </div>
+                    </div>
+                `;
+
+                // Aba Vendas
+                const controles = item.quantidade > 0 
+                    ? `<button class="btn-small btn-sell" onclick="registrarVenda('${id}', ${item.quantidade}, '${nomeCompleto}')">Vender</button>`
+                    : `<button class="btn-small btn-disabled" disabled>Esgotado</button>`;
+
+                listaPDV.innerHTML += `
+                    <div class="product-card">
+                        <div class="product-header"><span>${nomeCompleto}</span></div>
+                        <div class="action-row">
+                            <span style="font-size: 0.9rem; font-weight: bold;">Estoque: ${item.quantidade} disponíveis</span>
+                            <div class="controls-row">
+                                <input type="number" id="qtd-${id}" class="qtd-input" value="1" min="1">
+                                ${controles}
+                                <button class="btn-small btn-return" onclick="registrarDevolucao('${id}', ${item.quantidade}, '${nomeCompleto}')">Devolver</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>

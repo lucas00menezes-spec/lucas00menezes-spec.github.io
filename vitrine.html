@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Virtual</title>
+    <style>
+        :root {
+            --bg-color: #FAFAFA;
+            --surface: #FFFFFF;
+            --primary: #2563EB;
+            --text-main: #111827;
+            --text-light: #6B7280;
+            --border: #E5E7EB;
+            --whatsapp: #25D366;
+            --esgotado: #EF4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; }
+        
+        header { background-color: var(--surface); padding: 2rem 1rem; text-align: center; border-bottom: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        header h1 { font-size: 1.8rem; color: var(--text-main); margin-bottom: 0.5rem; }
+        header p { color: var(--text-light); font-size: 1rem; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+        .grid-produtos { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        
+        .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.05); }
+        
+        .card-img-placeholder { width: 100%; height: 200px; background-color: #F3F4F6; display: flex; align-items: center; justify-content: center; color: var(--text-light); font-size: 0.9rem; border-bottom: 1px solid var(--border); }
+        .card-img { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid var(--border); } /* Formatação da Foto Real */
+        
+        .card-body { padding: 1.5rem; display: flex; flex-direction: column; flex: 1; }
+        .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 0.3rem; }
+        .card-variacao { font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem; }
+        .card-preco { font-size: 1.4rem; font-weight: bold; color: var(--primary); margin-bottom: 1.5rem; }
+        
+        .btn-comprar { display: block; width: 100%; padding: 0.8rem; text-align: center; background-color: var(--whatsapp); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: auto; transition: background 0.2s; }
+        .btn-comprar:hover { background-color: #1EBE57; }
+        .btn-esgotado { display: block; width: 100%; padding: 0.8rem; text-align: center; background-color: #F3F4F6; color: var(--text-light); text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: auto; cursor: not-allowed; border: 1px solid var(--border); }
+        
+        .badge-estoque { display: inline-block; padding: 0.2rem 0.6rem; background: #FEF3C7; color: #D97706; border-radius: 12px; font-size: 0.8rem; font-weight: bold; margin-bottom: 1rem; width: fit-content; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Nossa Loja</h1>
+        <p>Catálogo de Produtos Disponíveis</p>
+    </header>
+
+    <div class="container">
+        <div id="vitrine-grid" class="grid-produtos">
+            <p style="text-align: center; width: 100%; color: gray;">Carregando vitrine...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA80-kjGG9SSnnch5RtQjUjWytLxsZ05Oc",
+            authDomain: "sistema-de-estoque-de-vitrine.firebaseapp.com",
+            projectId: "sistema-de-estoque-de-vitrine",
+            storageBucket: "sistema-de-estoque-de-vitrine.firebasestorage.app",
+            messagingSenderId: "708337828691",
+            appId: "1:708337828691:web:6d579669aaa92e3c3357a6",
+            measurementId: "G-9YZBZDGKS3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const numeroWhatsApp = "5521900000000";
+
+        const q = query(collection(db, "produtos"), orderBy("data_criacao", "desc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const vitrine = document.getElementById('vitrine-grid');
+            vitrine.innerHTML = ''; 
+            
+            if(snapshot.empty) {
+                vitrine.innerHTML = '<p style="text-align: center; width: 100%; color: gray;">Nenhum produto disponível no momento.</p>';
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const item = doc.data();
+                const detalhe = item.variacao ? item.variacao : '';
+                const valorFormatado = item.preco ? `R$ ${parseFloat(item.preco).toFixed(2).replace('.', ',')}` : 'Preço sob consulta';
+                
+                const textoZap = encodeURIComponent(`Olá! Tenho interesse no produto: ${item.nome} ${detalhe}. Ainda está disponível?`);
+                const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${textoZap}`;
+
+                let botaoHTML = '';
+                let badgeEstoque = '';
+
+                if (item.quantidade > 0) {
+                    botaoHTML = `<a href="${linkWhatsApp}" target="_blank" class="btn-comprar">Tenho Interesse (WhatsApp)</a>`;
+                    if(item.quantidade <= 3) {
+                        badgeEstoque = `<span class="badge-estoque">Restam apenas ${item.quantidade}!</span>`;
+                    }
+                } else {
+                    botaoHTML = `<div class="btn-esgotado">Produto Esgotado</div>`;
+                }
+
+                // Verifica se tem foto. Se sim, desenha a tag <img>. Se não, desenha o placeholder cinza.
+                const visualImagem = item.imagem_url 
+                    ? `<img src="${item.imagem_url}" alt="${item.nome}" class="card-img">` 
+                    : `<div class="card-img-placeholder"><span>[Sem Foto]</span></div>`;
+
+                vitrine.innerHTML += `
+                    <div class="card">
+                        ${visualImagem}
+                        <div class="card-body">
+                            <h2 class="card-title">${item.nome}</h2>
+                            <p class="card-variacao">${detalhe}</p>
+                            ${badgeEstoque}
+                            <div class="card-preco">${valorFormatado}</div>
+                            ${botaoHTML}
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
