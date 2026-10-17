@@ -84,6 +84,13 @@
             margin-top: 2rem;
         }
 
+        /* Estilização para transformar as tags <a> dos cards em blocos clicáveis estéticos */
+        .project-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
         /* Cards com efeito de vidro (Glassmorphism) */
         .project-card {
             background: var(--card-bg);
@@ -94,6 +101,8 @@
             padding: 2rem;
             transition: all 0.3s ease;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            height: 100%;
+            box-sizing: border-box;
         }
 
         .project-card:hover {
@@ -147,7 +156,7 @@
     <canvas id="matrix-bg"></canvas>
 
     <header>
-        <div class="mono" style="margin-bottom: 1rem; font-size: 1.1rem;">> init_system()</div>
+        <div class="mono" style="margin-bottom: 1rem; font-size: 1.1rem;">> status: online_</div>
         <h1>Lucas Menezes Santos</h1>
         <p>Desenvolvedor de Soluções. Construindo sistemas eficientes, arquiteturas limpas e experiências digitais focadas em conversão.</p>
     </header>
@@ -157,32 +166,41 @@
         
         <div class="projects-grid">
             
-            <div class="project-card">
-                <h3><span class="status-dot"></span>Site de Vendas</h3>
-                <p>Plataforma comercial estruturada para alta performance, focada na experiência do usuário e otimização de conversões.</p>
-                <div class="tags">
-                    <span class="tag">Frontend</span>
-                    <span class="tag">UI/UX</span>
+            <!-- CARD 1: VITRINE / SITE DE VENDAS -->
+            <a href="vitrine.html" class="project-card-link">
+                <div class="project-card">
+                    <h3><span class="status-dot"></span>Site de Vendas (Vitrine)</h3>
+                    <p>Catálogo digital responsivo alimentado em tempo real, integrado com redirecionamento de pedidos via WhatsApp.</p>
+                    <div class="tags">
+                        <span class="tag">Frontend</span>
+                        <span class="tag">UI/UX</span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
-            <div class="project-card">
-                <h3><span class="status-dot"></span>Sistema de Estoque</h3>
-                <p>Aplicação robusta para gerenciamento de inventário, projetada para escalabilidade e controle preciso de dados.</p>
-                <div class="tags">
-                    <span class="tag">Backend</span>
-                    <span class="tag">Banco de Dados</span>
+            <!-- CARD 2: SISTEMA DE ESTOQUE E BACKDOOR -->
+            <a href="estoque.html" class="project-card-link">
+                <div class="project-card">
+                    <h3><span class="status-dot"></span>Sistema de Estoque & PDV</h3>
+                    <p>Gestão de inventário e retaguarda (Backdoor). Inclui frente de caixa e integração para scanner OCR de cupons.</p>
+                    <div class="tags">
+                        <span class="tag">Backend</span>
+                        <span class="tag">Firebase</span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
-            <div class="project-card">
-                <h3><span class="status-dot"></span>Integração de Agentes de IA</h3>
-                <p>Implementação de inteligência artificial via API para automação de processos e análise de dados em tempo real.</p>
-                <div class="tags">
-                    <span class="tag">API</span>
-                    <span class="tag">LLM</span>
+            <!-- CARD 3: AUTOMAÇÃO E AGENTES DE IA -->
+            <a href="#" class="project-card-link" onclick="alert('Módulo de Automações em IA em fase de ajustes.'); return false;">
+                <div class="project-card">
+                    <h3><span class="status-dot"></span>Automação & Agentes de IA</h3>
+                    <p>Sistemas e agentes autônomos com diretrizes estruturadas para processamento de dados e execução de fluxos.</p>
+                    <div class="tags">
+                        <span class="tag">API</span>
+                        <span class="tag">LLM</span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
         </div>
     </main>
