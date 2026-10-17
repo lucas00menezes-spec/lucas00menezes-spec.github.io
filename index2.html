@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<p style="text-align: center; margin-top: 2rem; color: var(--text-light); font-size: 0.85rem;">
-    Prefere um visual personalizado? <a href="index.html" style="color: var(--accent);">Ver Versão 010101</a>
-</p>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lucas Menezes Santos | Portfólio</title>
@@ -30,7 +27,6 @@
             align-items: center;
         }
 
-        /* Tipografia focada em tecnologia, mas convidativa */
         h1, h2, h3 {
             font-weight: 600;
             letter-spacing: -0.5px;
@@ -44,7 +40,7 @@
         header {
             width: 100%;
             max-width: 900px;
-            padding: 6rem 2rem 4rem;
+            padding: 3rem 2rem 3rem;
             text-align: center;
         }
 
@@ -67,12 +63,18 @@
             padding: 0 2rem 4rem;
         }
 
-        /* Grid Minimalista para os Projetos */
         .projects-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
             margin-top: 2rem;
+        }
+
+        /* Estilização para transformar as tags <a> em blocos clicáveis */
+        .project-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
         }
 
         .project-card {
@@ -82,7 +84,8 @@
             padding: 2rem;
             transition: all 0.3s ease;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-            position: relative;
+            height: 100%;
+            box-sizing: border-box;
         }
 
         .project-card:hover {
@@ -102,7 +105,6 @@
             margin-bottom: 1.5rem;
         }
 
-        /* Tags de tecnologia estilo terminal */
         .tags {
             display: flex;
             gap: 0.5rem;
@@ -123,13 +125,34 @@
             display: inline-block;
             width: 8px;
             height: 8px;
-            background-color: #ECC94B; /* Amarelo - Em desenvolvimento */
+            background-color: var(--accent);
             border-radius: 50%;
             margin-right: 8px;
+        }
+
+        .top-nav {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .top-nav a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .top-nav a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
+
+    <div class="top-nav">
+        Prefere o tema visual escuro? <a href="index.html">Ver Versão 010101 (Matrix)</a>
+    </div>
 
     <header>
         <div class="mono" style="margin-bottom: 1rem; font-size: 1.1rem;">> hello_world</div>
@@ -142,35 +165,41 @@
         
         <div class="projects-grid">
             
-            <!-- Projeto 1 -->
-            <div class="project-card">
-                <h3><span class="status-dot"></span>Site de Vendas</h3>
-                <p>Plataforma comercial estruturada para alta performance, focada na experiência do usuário e otimização de conversões.</p>
-                <div class="tags">
-                    <span class="tag">Frontend</span>
-                    <span class="tag">UI/UX</span>
+            <!-- CARD 1: VITRINE / SITE DE VENDAS -->
+            <a href="vitrine.html" class="project-card-link">
+                <div class="project-card">
+                    <h3><span class="status-dot"></span>Site de Vendas (Vitrine)</h3>
+                    <p>Catálogo digital responsivo alimentado em tempo real, integrado com redirecionamento de pedidos via WhatsApp.</p>
+                    <div class="tags">
+                        <span class="tag">Frontend</span>
+                        <span class="tag">UI/UX</span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
-            <!-- Projeto 2 -->
-            <div class="project-card">
-                <h3><span class="status-dot"></span>Sistema de Estoque</h3>
-                <p>Aplicação robusta para gerenciamento de inventário, projetada para escalabilidade e controle preciso de dados.</p>
-                <div class="tags">
-                    <span class="tag">Backend</span>
-                    <span class="tag">Banco de Dados</span>
+            <!-- CARD 2: SISTEMA DE ESTOQUE E BACKDOOR -->
+            <a href="estoque.html" class="project-card-link">
+                <div class="project-card">
+                    <h3><span class="status-dot"></span>Sistema de Estoque & PDV</h3>
+                    <p>Gestão de inventário e retaguarda (Backdoor). Inclui frente de caixa e suporte a scanner OCR de cupons.</p>
+                    <div class="tags">
+                        <span class="tag">Backend</span>
+                        <span class="tag">Firebase</span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
-            <!-- Projeto 3 -->
-            <div class="project-card">
-                <h3><span class="status-dot"></span>Integração de Agentes de IA</h3>
-                <p>Implementação de inteligência artificial via API para automação de processos e análise de dados em tempo real.</p>
-                <div class="tags">
-                    <span class="tag">API</span>
-                    <span class="tag">LLM</span>
+            <!-- CARD 3: AUTOMAÇÃO E AGENTES DE IA -->
+            <a href="#" class="project-card-link" onclick="alert('Módulo de Automações em IA em fase de ajustes.'); return false;">
+                <div class="project-card">
+                    <h3><span class="status-dot"></span>Integração de Agentes de IA</h3>
+                    <p>Implementação de inteligência artificial via API para automação de processos e análise de dados em tempo real.</p>
+                    <div class="tags">
+                        <span class="tag">API</span>
+                        <span class="tag">LLM</span>
+                    </div>
                 </div>
-            </div>
+            </a>
 
         </div>
     </main>
